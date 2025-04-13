@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
@@ -21,12 +21,11 @@
         }
         label {
             display: inline-block;
-            width: 200px;
             font-weight: bold;
         }
         input {
             padding: 8px;
-            width: 100px;
+            width: 40px;
         }
         button {
             background-color: #54b6f8;
@@ -122,24 +121,94 @@
             border-radius: 3px;
             font-size: 14px;
         }
+        .fieldset-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        fieldset{
+            flex: 1;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        legend{
+            display: inline-block;
+            width: 200px;
+            font-weight: bold;
+        }
+        .time-box{
+            bottom: 0;
+            font-size: 14px;
+            padding: 5px;
+            border-radius: 3px;
+            background-color: rgba(255,255,255,0.8);
+            left: 0;
+            color: #000000;
+        }
     </style>
 </head>
 <body>
 <h1>标准田径场计算器</h1>
 
-<!--<div class="input-group">-->
-<!--    <label for="trackLength">田径场跑道长度 (米):</label>-->
-<!--    <input type="number" id="trackLength" value="400" min="100">-->
-<!--</div>-->
-
-<div class="input-group">
-    <label for="runner1Speed">跑步者A的速度 (米/秒):</label>
-    <input type="number" id="runner1Speed" value="20" min="0.1" step="0.1">
+<div class="fieldset-container">
+    <fieldset>
+        <legend>跑步者A的配速：（/km）</legend>
+        <input type="number" id="runner1Speed-min" value="5" min="1" step="1">
+        <label for="runner1Speed-min">分</label>
+        <input type="number" id="runner1Speed-s" value="0" min="0" step="1" max="59">
+        <label for="runner1Speed-s">秒</label>
+    </fieldset>
+    <fieldset>
+        <legend>速度</legend>
+        <div class="time-box" id="speed-1">0米/秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>400米时间</legend>
+        <div class="time-box" id="quarter-kilometer-1">0小时0分0秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>5000米时间</legend>
+        <div class="time-box" id="five-kilometer-1">0小时0分0秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>半马时间</legend>
+        <div class="time-box" id="half-marathon-1">0小时0分0秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>全马时间</legend>
+        <div class="time-box" id="full-marathon-1">0小时0分0秒</div>
+    </fieldset>
 </div>
 
-<div class="input-group">
-    <label for="runner2Speed">跑步者B的速度 (米/秒):</label>
-    <input type="number" id="runner2Speed" value="6" min="0.1" step="0.1">
+<div class="fieldset-container">
+    <fieldset>
+        <legend>跑步者B的配速：（/km）</legend>
+        <input type="number" id="runner2Speed-min" value="6" min="1" step="1">
+        <label for="runner2Speed-min">分</label>
+        <input type="number" id="runner2Speed-s" value="0" min="0" step="1" max="59">
+        <label for="runner2Speed-s">秒</label>
+    </fieldset>
+    <fieldset>
+        <legend>速度</legend>
+        <div class="time-box" id="speed-2">0米/秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>400米时间</legend>
+        <div class="time-box" id="quarter-kilometer-2">0小时0分0秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>5000米时间</legend>
+        <div class="time-box" id="five-kilometer-2">0小时0分0秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>半马时间</legend>
+        <div class="time-box" id="half-marathon-2">0小时0分0秒</div>
+    </fieldset>
+    <fieldset>
+        <legend>全马时间</legend>
+        <div class="time-box" id="full-marathon-2">0小时0分0秒</div>
+    </fieldset>
 </div>
 
 <div class="input-group">
@@ -151,7 +220,7 @@
     <button onclick="startAnimation()">开始动画</button>
     <button onclick="pauseAnimation()">暂停</button>
     <button onclick="resetAnimation()">重置</button>
-    <button onclick="calculate()">计算追及情况</button>
+    <button onclick="calculate()">计算</button>
 </div>
 
 <div class="track-container">
@@ -169,7 +238,7 @@
 
 <script>
     // 全局变量
-    let trackLength_g = 400
+    let trackLength_g = 400;
     let animationId = null;
     let startTime = null;
     let lastTime = null;
@@ -180,8 +249,10 @@
 
     // 跑步者数据
     const runners = {
-        runner1: { speed: 20, distance: 0, element: null, infoElement: null },
-        runner2: { speed: 6, distance: 0, element: null, infoElement: null },
+        runner1: { speed: null, distance: 0, element: null, infoElement: null, speedElement: null,
+            quarter_kilometer: null, five_kilometer: null, half_marathon: null, full_marathon: null},
+        runner2: { speed: null, distance: 0, element: null, infoElement: null, speedElement:null,
+            quarter_kilometer: null, five_kilometer: null, half_marathon: null, full_marathon: null},
         apart: null
     };
 
@@ -189,15 +260,44 @@
     document.addEventListener('DOMContentLoaded', function() {
         runners.runner1.element = document.getElementById('runner1');
         runners.runner2.element = document.getElementById('runner2');
+        runners.runner1.speedElement = document.getElementById('speed-1');
+        runners.runner2.speedElement = document.getElementById('speed-2');
+        runners.runner1.quarter_kilometer = document.getElementById('quarter-kilometer-1');
+        runners.runner2.quarter_kilometer = document.getElementById('quarter-kilometer-2');
+        runners.runner1.five_kilometer = document.getElementById('five-kilometer-1');
+        runners.runner2.five_kilometer = document.getElementById('five-kilometer-2');
+        runners.runner1.half_marathon = document.getElementById('half-marathon-1');
+        runners.runner2.half_marathon = document.getElementById('half-marathon-2');
+        runners.runner1.full_marathon = document.getElementById('full-marathon-1');
+        runners.runner2.full_marathon = document.getElementById('full-marathon-2');
         runners.runner1.infoElement = document.getElementById('info1');
         runners.runner2.infoElement = document.getElementById('info2');
-        runners.apart = document.getElementById('info3')
+        runners.apart = document.getElementById('info3');
 
 
         // 设置初始位置
         resetAnimation();
     });
 
+    //速度初始化
+    function speed_initialization(){
+        const runner1_speed_min = parseInt(document.getElementById('runner1Speed-min').value);
+        const runner1_speed_s = parseInt(document.getElementById('runner1Speed-s').value);
+        const runner2_speed_min = parseInt(document.getElementById('runner2Speed-min').value);
+        const runner2_speed_s = parseInt(document.getElementById('runner2Speed-s').value);
+        runners.runner1.speed = 1000 / (runner1_speed_min * 60 + runner1_speed_s);
+        runners.runner2.speed = 1000 / (runner2_speed_min * 60 + runner2_speed_s);
+        // 验证输入
+        if (runners.runner1.speed <= 0 || runners.runner2.speed <= 0) {
+            alert("请输入有效的数值！");
+            return;
+        }
+        // 显示速度
+        runners.runner1.speedElement.textContent =
+            `${runners.runner1.speed.toFixed(1)}米/秒`;
+        runners.runner2.speedElement.textContent =
+            `${runners.runner2.speed.toFixed(1)}米/秒`;
+    }
     function startAnimation() {
         if (animationId) {
             if (isPaused) {
@@ -208,16 +308,20 @@
                 animate();
             }
             return;
+
         }
 
-        // 获取输入值
+
         const trackLength = trackLength_g;
-        runners.runner1.speed = parseFloat(document.getElementById('runner1Speed').value);
-        runners.runner2.speed = parseFloat(document.getElementById('runner2Speed').value);
+
+        //速度初始化
+        speed_initialization();
+
+        // 获取输入值
         startPosition = parseFloat(document.getElementById('startPosition').value);
 
         // 验证输入
-        if (runners.runner1.speed <= 0 || runners.runner2.speed <= 0 || trackLength <= 0 || startPosition < 0) {
+        if (trackLength <= 0 || startPosition < 0) {
             alert("请输入有效的数值！");
             return;
         }
@@ -300,12 +404,12 @@
     }
 
     function updateRunnerPositions(trackLength) {
-        let x1
-        let x2
-        let y1
-        let y2
-        let angle1
-        let angle2
+        let x1;
+        let x2;
+        let y1;
+        let y2;
+        let angle1;
+        let angle2;
         const length = 421.95;
         const trackHeight = 365;
         const radius = 182.5;
@@ -313,8 +417,8 @@
         // 计算在跑道上的位置
         const position1 = runners.runner1.distance;
         const position2 = runners.runner2.distance;
-        const position1_calculation = position1 - 400*parseInt(position1/400)
-        const position2_calculation = position2 - 400*parseInt(position2/400)
+        const position1_calculation = position1 - 400*parseInt(position1/400);
+        const position2_calculation = position2 - 400*parseInt(position2/400);
         // 更新跑者位置
         // runner1
         if (position1_calculation <= 84.39){
@@ -377,24 +481,58 @@
             `B: ${runners.runner2.distance.toFixed(1)}米 (${laps2}圈)`;
     }
 
+    //时间格式化
+    function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.round(seconds % 60);
+
+        return `${hours}小时 ${minutes}分 ${secs}秒`;
+    }
+
     function calculate() {
         // 获取输入值
-        const trackLength = parseFloat(document.getElementById('trackLength').value);
-        const runner1Speed = parseFloat(document.getElementById('runner1Speed').value);
-        const runner2Speed = parseFloat(document.getElementById('runner2Speed').value);
+        const trackLength = trackLength_g;
         const startPosition = parseFloat(document.getElementById('startPosition').value);
 
+        //速度初始化
+        speed_initialization();
+        const runner1Speed = runners.runner1.speed;
+        const runner2Speed = runners.runner2.speed;
+
         // 验证输入
-        if (runner1Speed <= 0 || runner2Speed <= 0 || trackLength <= 0 || startPosition < 0) {
+        if (trackLength <= 0 || startPosition < 0) {
             alert("请输入有效的数值！");
             return;
         }
+
+        //计算用时
+        const quarter_kilometer = 400;
+        const five_kilometer = 5000;
+        const half_marathon = 21097.5;
+        const full_marathon = 42195;
+        const runner1_quarter_kilometer = quarter_kilometer / runner1Speed;
+        runners.runner1.quarter_kilometer.textContent = formatTime(runner1_quarter_kilometer);
+        const runner1_five_kilometer = five_kilometer / runner1Speed;
+        runners.runner1.five_kilometer.textContent = formatTime(runner1_five_kilometer);
+        const runner1_half_marathon = half_marathon / runner1Speed;
+        runners.runner1.half_marathon.textContent = formatTime(runner1_half_marathon);
+        const runner1_full_marathon = full_marathon / runner1Speed;
+        runners.runner1.full_marathon.textContent = formatTime(runner1_full_marathon);
+        const runner2_quarter_kilometer = quarter_kilometer / runner2Speed;
+        runners.runner2.quarter_kilometer.textContent = formatTime(runner2_quarter_kilometer);
+        const runner2_five_kilometer = five_kilometer / runner2Speed;
+        runners.runner2.five_kilometer.textContent = formatTime(runner2_five_kilometer);
+        const runner2_half_marathon = half_marathon / runner2Speed;
+        runners.runner2.half_marathon.textContent = formatTime(runner2_half_marathon);
+        const runner2_full_marathon = full_marathon / runner2Speed;
+        runners.runner2.full_marathon.textContent = formatTime(runner2_full_marathon);
 
         // 计算追及时间
         let timeToCatch;
         let resultText = "";
 
-        if (runne1Speed > runner2Speed) {
+        if (runner1Speed > runner2Speed && startPosition > 0) {
             // A比B快，A会追上B
             const relativeSpeed = runner1Speed - runner2Speed;
             timeToCatch = startPosition / relativeSpeed;
@@ -419,12 +557,20 @@
                     <p>此时B已经跑了 <strong>${(runner2Speed * timeToCatch).toFixed(2)} 米</strong> (约 ${laps.toFixed(2)} 圈)。</p>
                     <p>A已经跑了 <strong>${(runner1Speed * timeToCatch).toFixed(2)} 米</strong> (约 ${(runner1Speed * timeToCatch / trackLength).toFixed(2)} 圈)。</p>
                 `;
-        } else {
+        } else if (runner1Speed === runner2Speed) {
             // 速度相同
             resultText = `
                     <h3>计算结果</h3>
                     <p>两人速度相同，保持初始距离不变。</p>
                     <p>跑步者B将一直在跑步者A前方 ${startPosition} 米处。</p>
+                `;
+        }
+        else if (runner1Speed > runner2Speed && startPosition === 0) {
+            // A比B快，且同一起跑线，A会追上B
+            resultText = `
+                    <h3>计算结果</h3>
+                    <p>两者同一起跑线起跑</p>
+                    <p>跑步者A将一直在跑步者B前方</p>
                 `;
         }
 
