@@ -1,0 +1,24 @@
+/* 经典重置代码片段（Eric Meyer's Reset CSS 简化版） */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+img {
+    border: 0;
+    max-width: 100%;
+}
